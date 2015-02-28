@@ -1,0 +1,173 @@
+#ifndef __Compiler__LA__
+#define __Compiler__LA__
+
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+#include <cctype>
+#include <string>
+
+void re_commend(char *x, int m);
+void write_file(std::fstream &write, int n, char *token);
+void check_first_char(std::fstream &write, int n, char *token);
+void check_last_char(std::fstream &write, int n, char *token);
+void check_middle_char(std::fstream &write, int n, char *token);
+void check_end_point(std::fstream &write, int n, char *token);
+std::string classify_token(char *toke, int n, int digit_counter);
+
+void re_commend(char *x, int m){
+	m = strlen(x);   // count string length
+	for (int i = 0; i < m; ++i){
+		if (x[i] == '/'  && x[i + 1] == '/'){
+			m = i;
+		}
+	}
+	x[m] = '\0';  // delete the command words
+}
+
+void write_file(std::fstream &write, int n, char *token){
+	
+	if (n == 1){
+		if (token[0] == ';'){ write << token[0] << std::endl; }
+		else { write << token[0]; }
+	}
+
+	else if (token[0] == '+' || token[0] == '-' || token[0] == '*' || token[0] == '/' || token[0] == ':=' || 
+			 token[0] == ',' || token[0] == '('){
+		check_first_char(write, n, token);
+	}
+
+	else if (token[n - 1] == '+' || token[n - 1] == '-' || token[n - 1] == '*' || token[n - 1] == '/' || 
+			 token[n - 1] == ':=' || token[n - 1] == ',' || token[n - 1] == ')'){
+		check_last_char(write, n, token);
+	}
+
+	else{ check_middle_char(write, n, token); }
+
+	check_end_point(write, n, token);
+
+}
+
+
+void check_first_char(std::fstream &write, int n, char *token){
+
+	write << token[0] << " ";
+
+	for (int i = 1; i < n - 1; i++){
+
+		if (token[i] == '+' || token[i] == '-' || token[i] == '*' || token[i] == '/' || token[i] == ':=' ||
+			token[i] == ',' || token[i] == '(' || token[i] == '<' || token[i] == '>' || token[i] == '='){
+			write << " " << token[i] << " ";
+		}
+
+		else if (token[i] == ';'){ write << " " << token[i] << std::endl; }
+
+		else write << token[i];
+	}
+
+	if (token[n - 1] == '+' || token[n - 1] == '-' || token[n - 1] == '*' || token[n - 1] == '/' ||
+		token[n - 1] == '=' || token[n - 1] == ',' || token[n - 1] == ')'){
+		write << " " << token[n - 1];
+	}
+
+	else if (token[n - 1] == ';'){ write << " " << token[n - 1] << std::endl; }
+
+	else write << token[n - 1];
+}
+
+void check_last_char(std::fstream &write, int n, char *token){
+
+	for (int i = 0; i<n - 1; i++){
+
+		if (token[i] == '+' || token[i] == '-' || token[i] == '*' || token[i] == '/' || token[i] == ':=' || 
+			token[i] == ',' || token[i] == '(' || token[i] == ')' || token[i] == '<'){
+			write << " " << token[i] << " ";
+		}
+
+		else if (token[i] == ';'){ write << " " << token[i] << std::endl; }
+
+		else { write << token[i]; }
+	}
+
+	if (token[n - 1] == ')') { write << " " << token[n - 1]; }
+
+	else { write << " " << token[n - 1]; }
+
+}
+
+
+
+void check_middle_char(std::fstream &write, int n, char *token){
+
+	for (int i = 0; i < n; i++){
+
+		if (token[i] == ':'&&token[i + 1] == '='){ write << " " << token[i]; }
+
+		else if (token[i] == '+' || token[i] == '-' || token[i] == '*' || token[i] == '/' || token[i] == ',' || token[i] == ':' ||
+			token[i] == '>' || token[i] == '<'|| token[i] == '(' || token[i] == ')'){
+
+			write << " " << token[i] << " ";
+		}
+
+		else if (token[i] == '=' && token[i-1] == ':'){ write << token[i] << " "; }
+
+		else if (token[i] == '='){ write << " " << token[i] << " "; }
+
+		else if (token[i] == ';'){ write << " " << token[i] << std::endl; }
+
+		
+		else { write << token[i]; }
+	}
+}
+
+
+
+void check_end_point(std::fstream &write, int n, char *token){
+
+	if (token[n - 1] != ';'){ write << " "; }
+
+	if (token[n - 1] == '{' || token[n - 1] == '}' || token[n-1]==']' || (token[n-2]=='@' && token[n-1]=='@')){
+		write << std::endl; 
+	}
+	
+	
+}
+
+
+std::string classify_token(char *token, int n, int digit_counter){
+
+	n = strlen(token);
+	
+	for (int i = 0; i < n; i++){
+		if (token[i] == '.' || isdigit(token[i])) {	digit_counter++; }
+	}
+
+	if (digit_counter == n) { return "number"; }
+
+	if (token[0] == ':' && token[1] == '='){ return "operator"; }
+
+	if (token[0] == ':' || token[0] == '(' || token[0] == ')' || token[0] == '{' || token[0] == '}' || token[0] == ';' ||
+		token[0] == ',' || (token[0] == '@' && token[1]=='@')){
+		return "separator";
+	}
+
+	if (token[0] == '+' || token[0] == '-' || token[0] == '*' || token[0] == '/' || token[0] == '=') { return "operator"; }
+	
+	/*else if (strcmp("if", token) == 0 || strcmp("else", token) == 0 || strcmp("endif", token) == 0 ||
+		     strcmp("return", token) == 0 || strcmp("write", token) == 0 || strcmp("read", token) == 0 ||
+			 strcmp("while", token) == 0 | strcmp("boolean", token) == 0 ){ 
+		return "keyword"; 
+	}*/
+
+	else if (strncmp("while", token, 5) == 0){ return "keyword:"; }
+
+	else if (n > 1 && digit_counter != n)
+	{
+		return "identifer";
+	}
+	return "Mistake!!!!";
+}
+
+
+
+#endif
